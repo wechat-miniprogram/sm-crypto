@@ -1,7 +1,1 @@
-<slide-view class="slide" width="320" height="100" slideWidth="200">
-  <view slot="left" class="l">这里是插入静止时现实的内容</view>
-  <view slot="right" class="r">
-    <view style="background-color: yellow; width: 100rpx; ">标为已读</view>
-    <view style="background-color: green; width: 100rpx; ">删除</view>
-  </view>
-</slide-view>
+<view>请看 console</view>

@@ -14,7 +14,7 @@
 	"compileType": "miniprogram",
 	"libVersion": "2.1.0",
 	"appid": "",
-	"projectname": "slide-view",
+	"projectname": "sm-crypto",
 	"isGameTourist": false,
 	"condition": {
 		"search": {

@@ -8,13 +8,6 @@ let state;
 
 // Initialize the pool with junk if needed.
 pptr = 0;
-if (window && window.navigator && window.navigator.appName == "Netscape" && window.navigator.appVersion < "5" && window.crypto) {
-    // Extract entropy (256 bits) from NS4 RNG if available
-    let z = crypto.random(32);
-    for (let t = 0; t < z.length; t++) {
-        pool[pptr++] = z.charCodeAt(t) & 255;
-    }
-}  
 while (pptr < psize) {  // extract some randomness from Math.random()
     let t = Math.floor(65536 * Math.random());
     pool[pptr++] = t >>> 8;
