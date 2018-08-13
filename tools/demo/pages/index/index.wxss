@@ -1,0 +1,13 @@
+.slide{
+}
+.l {
+  background-color: blue;
+  height: 100rpx;
+  width: 320rpx;
+}
+.r {
+  height: 100rpx;
+  width: 200rpx;
+  display: flex;
+  direction: row;
+}

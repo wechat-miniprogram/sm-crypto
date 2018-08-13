@@ -1,0 +1,5 @@
+{
+  "usingComponents": {
+    "slide-view": "/components/index"
+  }
+}
