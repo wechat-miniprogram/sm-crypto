@@ -35,5 +35,7 @@
     "webpack": "^4.16.0",
     "webpack-node-externals": "^1.7.2"
   },
-  "dependencies": {}
+  "dependencies": {
+    "jsbn": "^1.1.0"
+  }
 }
