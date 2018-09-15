@@ -11,13 +11,13 @@ const C1C2C3 = 0
 /**
  * sm3杂凑算法
  */
-function doSm3Hash(msg, publicKey) {
+function doSm3Hash(hashHex, publicKey) {
   const smDigest = new SM3Digest()
 
   const z = new SM3Digest().getZ(G, publicKey.substr(2, 128))
   const zValue = _.hexToArray(_.arrayToHex(z).toString())
 
-  const p = typeof msg === 'string' ? _.parseUtf8StringToHex(msg) : _.parseArrayBufferToHex(msg)
+  const p = hashHex
   const pValue = _.hexToArray(p)
 
   const hashData = new Array(smDigest.getDigestSize())

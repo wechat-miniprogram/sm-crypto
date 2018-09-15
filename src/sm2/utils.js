@@ -135,7 +135,14 @@ function arrayToUtf8(arr) {
  */
 function hexToArray(hexStr) {
   const words = []
-  const hexStrLength = hexStr.length
+  let hexStrLength = hexStr.length
+
+  if (hexStrLength % 2 !== 0) {
+    hexStr = leftPad(hexStr, hexStrLength + 1)
+  }
+
+  hexStrLength = hexStr.length
+
   for (let i = 0; i < hexStrLength; i += 2) {
     words.push(parseInt(hexStr.substr(i, 2), 16))
   }
