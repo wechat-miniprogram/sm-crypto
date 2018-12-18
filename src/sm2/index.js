@@ -58,7 +58,7 @@ function doEncrypt(msg, publicKey, cipherMode = 1) {
  * 解密
  */
 function doDecrypt(encryptData, privateKey, cipherMode = 1) {
-  const cipher = new SM2Cipher(cipherMode)
+  const cipher = new SM2Cipher()
 
   privateKey = new BigInteger(privateKey, 16)
 
