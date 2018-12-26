@@ -1,4 +1,4 @@
-/* eslint-disable no-case-declarations */
+/* eslint-disable no-case-declarations, max-len */
 const {BigInteger} = require('jsbn')
 
 /**
@@ -11,45 +11,71 @@ const {BigInteger} = require('jsbn')
 
 const THREE = new BigInteger('3')
 
+/**
+ * 椭圆曲线域元素
+ */
 class ECFieldElementFp {
   constructor(q, x) {
     this.x = x
     this.q = q
-    // TODO if(x.compareTo(q) >= 0) error
+    // TODO if (x.compareTo(q) >= 0) error
   }
 
+  /**
+     * 判断相等
+     */
   equals(other) {
     if (other === this) return true
     return (this.q.equals(other.q) && this.x.equals(other.x))
   }
 
+  /**
+     * 返回具体数值
+     */
   toBigInteger() {
     return this.x
   }
 
+  /**
+     * 取反
+     */
   negate() {
     return new ECFieldElementFp(this.q, this.x.negate().mod(this.q))
   }
 
+  /**
+     * 相加
+     */
   add(b) {
     return new ECFieldElementFp(this.q, this.x.add(b.toBigInteger()).mod(this.q))
   }
 
+  /**
+     * 相减
+     */
   subtract(b) {
     return new ECFieldElementFp(this.q, this.x.subtract(b.toBigInteger()).mod(this.q))
   }
 
+  /**
+     * 相乘
+     */
   multiply(b) {
     return new ECFieldElementFp(this.q, this.x.multiply(b.toBigInteger()).mod(this.q))
   }
 
-  square() {
-    return new ECFieldElementFp(this.q, this.x.square().mod(this.q))
+  /**
+     * 相除
+     */
+  divide(b) {
+    return new ECFieldElementFp(this.q, this.x.multiply(b.toBigInteger().modInverse(this.q)).mod(this.q))
   }
 
-  divide(b) {
-    return new ECFieldElementFp(this.q,
-      this.x.multiply(b.toBigInteger().modInverse(this.q)).mod(this.q))
+  /**
+     * 平方
+     */
+  square() {
+    return new ECFieldElementFp(this.q, this.x.square().mod(this.q))
   }
 }
 
@@ -58,8 +84,7 @@ class ECPointFp {
     this.curve = curve
     this.x = x
     this.y = y
-    // Projective coordinates: either zinv == null or z * zinv == 1
-    // z and zinv are just BigIntegers, not fieldElements
+    // 标准射影坐标系：zinv == null 或 z * zinv == 1
     this.z = z == null ? BigInteger.ONE : z
     this.zinv = null
     // TODO: compression flag
@@ -77,214 +102,200 @@ class ECPointFp {
     return this.curve.fromBigInteger(this.y.toBigInteger().multiply(this.zinv).mod(this.curve.q))
   }
 
+  /**
+     * 判断相等
+     */
   equals(other) {
     if (other === this) return true
     if (this.isInfinity()) return other.isInfinity()
     if (other.isInfinity()) return this.isInfinity()
 
-    // u = Y2 * Z1 - Y1 * Z2
-    const u = other.y.toBigInteger()
-      .multiply(this.z)
-      .subtract(this.y.toBigInteger().multiply(other.z))
-      .mod(this.curve.q)
+    // u = y2 * z1 - y1 * z2
+    const u = other.y.toBigInteger().multiply(this.z).subtract(this.y.toBigInteger().multiply(other.z)).mod(this.curve.q)
     if (!u.equals(BigInteger.ZERO)) return false
 
-    // v = X2 * Z1 - X1 * Z2
-    const v = other.x.toBigInteger()
-      .multiply(this.z)
-      .subtract(this.x.toBigInteger().multiply(other.z))
-      .mod(this.curve.q)
+    // v = x2 * z1 - x1 * z2
+    const v = other.x.toBigInteger().multiply(this.z).subtract(this.x.toBigInteger().multiply(other.z)).mod(this.curve.q)
     return v.equals(BigInteger.ZERO)
   }
 
+  /**
+     * 是否是无穷远点
+     */
   isInfinity() {
-    if ((this.x == null) && (this.y == null)) return true
+    if ((this.x === null) && (this.y === null)) return true
     return this.z.equals(BigInteger.ZERO) && !this.y.toBigInteger().equals(BigInteger.ZERO)
   }
 
+  /**
+     * 取反，x 轴对称点
+     */
   negate() {
     return new ECPointFp(this.curve, this.x, this.y.negate(), this.z)
   }
 
+  /**
+     * 相加
+     *
+     * 标准射影坐标系：
+     *
+     * λ1 = x1 * z2
+     * λ2 = x2 * z1
+     * λ3 = λ1 − λ2
+     * λ4 = y1 * z2
+     * λ5 = y2 * z1
+     * λ6 = λ4 − λ5
+     * λ7 = λ1 + λ2
+     * λ8 = z1 * z2
+     * λ9 = λ3^2
+     * λ10 = λ3 * λ9
+     * λ11 = λ8 * λ6^2 − λ7 * λ9
+     * x3 = λ3 * λ11
+     * y3 = λ6 * (λ9 * λ1 − λ11) − λ4 * λ10
+     * z3 = λ10 * λ8
+     */
   add(b) {
     if (this.isInfinity()) return b
     if (b.isInfinity()) return this
 
-    // u = Y2 * Z1 - Y1 * Z2
-    const u = b.y.toBigInteger()
-      .multiply(this.z)
-      .subtract(this.y.toBigInteger().multiply(b.z))
-      .mod(this.curve.q)
-    // v = X2 * Z1 - X1 * Z2
-    const v = b.x.toBigInteger()
-      .multiply(this.z)
-      .subtract(this.x.toBigInteger().multiply(b.z))
-      .mod(this.curve.q)
-
-    if (BigInteger.ZERO.equals(v)) {
-      if (BigInteger.ZERO.equals(u)) {
-        return this.twice() // this == b, so double
-      }
-      return this.curve.getInfinity() // this = -b, so infinity
-    }
-
     const x1 = this.x.toBigInteger()
     const y1 = this.y.toBigInteger()
+    const z1 = this.z
+    const x2 = b.x.toBigInteger()
+    const y2 = b.y.toBigInteger()
+    const z2 = b.z
+    const q = this.curve.q
 
-    const v2 = v.square()
-    const v3 = v2.multiply(v)
-    const x1v2 = x1.multiply(v2)
-    const zu2 = u.square().multiply(this.z)
+    const w1 = x1.multiply(z2).mod(q)
+    const w2 = x2.multiply(z1).mod(q)
+    const w3 = w1.subtract(w2)
+    const w4 = y1.multiply(z2).mod(q)
+    const w5 = y2.multiply(z1).mod(q)
+    const w6 = w4.subtract(w5)
 
-    // x3 = v * (z2 * (z1 * u^2 - 2 * x1 * v^2) - v^3)
-    const x3 = zu2.subtract(x1v2.shiftLeft(1)).multiply(b.z).subtract(v3).multiply(v)
-      .mod(this.curve.q)
-    // y3 = z2 * (3 * x1 * u * v^2 - y1 * v^3 - z1 * u^3) + u * v^3
-    const y3 = x1v2.multiply(THREE).multiply(u).subtract(y1.multiply(v3)).subtract(zu2.multiply(u))
-      .multiply(b.z)
-      .add(u.multiply(v3))
-      .mod(this.curve.q)
-    // z3 = v^3 * z1 * z2
-    const z3 = v3.multiply(this.z).multiply(b.z).mod(this.curve.q)
+    if (BigInteger.ZERO.equals(w3)) {
+      if (BigInteger.ZERO.equals(w6)) {
+        return this.twice() // this == b，计算自加
+      }
+      return this.curve.infinity // this == -b，则返回无穷远点
+    }
 
-    return new ECPointFp(this.curve,
-      this.curve.fromBigInteger(x3),
-      this.curve.fromBigInteger(y3), z3)
+    const w7 = w1.add(w2)
+    const w8 = z1.multiply(z2).mod(q)
+    const w9 = w3.square().mod(q)
+    const w10 = w3.multiply(w9).mod(q)
+    const w11 = w8.multiply(w6.square()).subtract(w7.multiply(w9)).mod(q)
+
+    const x3 = w3.multiply(w11).mod(q)
+    const y3 = w6.multiply(w9.multiply(w1).subtract(w11)).subtract(w4.multiply(w10)).mod(q)
+    const z3 = w10.multiply(w8).mod(q)
+
+    return new ECPointFp(this.curve, this.curve.fromBigInteger(x3), this.curve.fromBigInteger(y3), z3)
   }
 
+  /**
+     * 自加
+     *
+     * 标准射影坐标系：
+     *
+     * λ1 = 3 * x1^2 + a * z1^2
+     * λ2 = 2 * y1 * z1
+     * λ3 = y1^2
+     * λ4 = λ3 * x1 * z1
+     * λ5 = λ2^2
+     * λ6 = λ1^2 − 8 * λ4
+     * x3 = λ2 * λ6
+     * y3 = λ1 * (4 * λ4 − λ6) − 2 * λ5 * λ3
+     * z3 = λ2 * λ5
+     */
   twice() {
     if (this.isInfinity()) return this
-    if (this.y.toBigInteger().signum() === 0) return this.curve.getInfinity()
+    if (!this.y.toBigInteger().signum()) return this.curve.infinity
 
     const x1 = this.x.toBigInteger()
     const y1 = this.y.toBigInteger()
-
-    const y1z1 = y1.multiply(this.z)
-    const y1sqz1 = y1z1.multiply(y1).mod(this.curve.q)
+    const z1 = this.z
+    const q = this.curve.q
     const a = this.curve.a.toBigInteger()
 
-    // w = 3 * x1^2 + a * z1^2
-    let w = x1.square().multiply(THREE)
-    if (!BigInteger.ZERO.equals(a)) {
-      w = w.add(this.z.square().multiply(a))
-    }
-    w = w.mod(this.curve.q)
-    // x3 = 2 * y1 * z1 * (w^2 - 8 * x1 * y1^2 * z1)
-    const x3 = w.square().subtract(x1.shiftLeft(3).multiply(y1sqz1)).shiftLeft(1).multiply(y1z1)
-      .mod(this.curve.q)
-    // y3 = 4 * y1^2 * z1 * (3 * w * x1 - 2 * y1^2 * z1) - w^3
-    const y3 = w.multiply(THREE).multiply(x1).subtract(y1sqz1.shiftLeft(1)).shiftLeft(2)
-      .multiply(y1sqz1)
-      .subtract(w.square().multiply(w))
-      .mod(this.curve.q)
-    // z3 = 8 * (y1 * z1)^3
-    const z3 = y1z1.square().multiply(y1z1).shiftLeft(3).mod(this.curve.q)
+    const w1 = x1.square().multiply(THREE).add(a.multiply(z1.square())).mod(q)
+    const w2 = y1.shiftLeft(1).multiply(z1).mod(q)
+    const w3 = y1.square().mod(q)
+    const w4 = w3.multiply(x1).multiply(z1).mod(q)
+    const w5 = w2.square().mod(q)
+    const w6 = w1.square().subtract(w4.shiftLeft(3)).mod(q)
 
-    return new ECPointFp(this.curve,
-      this.curve.fromBigInteger(x3),
-      this.curve.fromBigInteger(y3), z3)
+    const x3 = w2.multiply(w6).mod(q)
+    const y3 = w1.multiply(w4.shiftLeft(2).subtract(w6)).subtract(w5.shiftLeft(1).multiply(w3)).mod(q)
+    const z3 = w2.multiply(w5).mod(q)
+
+    return new ECPointFp(this.curve, this.curve.fromBigInteger(x3), this.curve.fromBigInteger(y3), z3)
   }
 
+  /**
+     * 倍点计算
+     */
   multiply(k) {
-    // Simple NAF (Non-Adjacent Form) multiplication algorithm
     if (this.isInfinity()) return this
-    if (k.signum() === 0) return this.curve.getInfinity()
+    if (!k.signum()) return this.curve.infinity
 
-    const e = k
-    const h = e.multiply(new BigInteger('3'))
-
+    // 使用加减法
+    const k3 = k.multiply(THREE)
     const neg = this.negate()
-    let R = this
+    let Q = this
 
-    for (let i = h.bitLength() - 2; i > 0; --i) {
-      R = R.twice()
+    for (let i = k3.bitLength() - 2; i > 0; i--) {
+      Q = Q.twice()
 
-      const hBit = h.testBit(i)
-      const eBit = e.testBit(i)
+      const k3Bit = k3.testBit(i)
+      const kBit = k.testBit(i)
 
-      if (hBit !== eBit) {
-        R = R.add(hBit ? this : neg)
+      if (k3Bit !== kBit) {
+        Q = Q.add(k3Bit ? this : neg)
       }
     }
 
-    return R
-  }
-
-  multiplyTwo(j, x, k) {
-    // Compute this * j + x * k (simultaneous multiplication)
-    let i = j.bitLength() > k.bitLength() ? j.bitLength() - 1 : k.bitLength() - 1
-    let R = this.curve.getInfinity()
-    const both = this.add(x)
-    while (i >= 0) {
-      R = R.twice()
-      if (j.testBit(i)) {
-        if (k.testBit(i)) R = R.add(both)
-        else R = R.add(this)
-      } else if (k.testBit(i)) R = R.add(x)
-      --i
-    }
-
-    return R
-  }
-
-  static decodeFromHex(curve, encHex) {
-    const dataLen = encHex.length - 2
-
-    // Extract x and y as byte arrays
-    const xHex = encHex.substr(2, dataLen / 2)
-    const yHex = encHex.substr(2 + dataLen / 2, dataLen / 2)
-
-    // Convert to BigIntegers
-    const x = new BigInteger(xHex, 16)
-    const y = new BigInteger(yHex, 16)
-
-    // Return point
-    return new ECPointFp(curve, curve.fromBigInteger(x), curve.fromBigInteger(y))
+    return Q
   }
 }
 
+/**
+ * 椭圆曲线 y^2 = x^3 + ax + b
+ */
 class ECCurveFp {
   constructor(q, a, b) {
     this.q = q
     this.a = this.fromBigInteger(a)
     this.b = this.fromBigInteger(b)
-    this.infinity = new ECPointFp(this, null, null)
+    this.infinity = new ECPointFp(this, null, null) // 无穷远点
   }
 
-  getQ() {
-    return this.q
-  }
-
-  getA() {
-    return this.a
-  }
-
-  getB() {
-    return this.b
-  }
-
+  /**
+     * 判断两个椭圆曲线是否相等
+     */
   equals(other) {
     if (other === this) return true
     return (this.q.equals(other.q) && this.a.equals(other.a) && this.b.equals(other.b))
   }
 
-  getInfinity() {
-    return this.infinity
-  }
-
+  /**
+     * 生成椭圆曲线域元素
+     */
   fromBigInteger(x) {
     return new ECFieldElementFp(this.q, x)
   }
 
+  /**
+     * 解析 16 进制串为椭圆曲线点
+     */
   decodePointHex(s) {
-    // for now, work with hex strings because they're easier in JS
     switch (parseInt(s.substr(0, 2), 16)) {
-      // first byte
+      // 第一个字节
       case 0:
         return this.infinity
       case 2:
       case 3:
-        // point compression not supported yet
+        // 不支持的压缩方式
         return null
       case 4:
       case 6:
@@ -293,18 +304,15 @@ class ECCurveFp {
         const xHex = s.substr(2, len)
         const yHex = s.substr(len + 2, len)
 
-        return new ECPointFp(this,
-          this.fromBigInteger(new BigInteger(xHex, 16)),
-          this.fromBigInteger(new BigInteger(yHex, 16)))
-
-      default: // unsupported
+        return new ECPointFp(this, this.fromBigInteger(new BigInteger(xHex, 16)), this.fromBigInteger(new BigInteger(yHex, 16)))
+      default:
+        // 不支持
         return null
     }
   }
 }
 
 module.exports = {
-  ECFieldElementFp,
   ECPointFp,
   ECCurveFp,
 }

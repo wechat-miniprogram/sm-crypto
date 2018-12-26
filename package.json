@@ -1,6 +1,6 @@
 {
 	"name": "miniprogram-sm-crypto",
-	"version": "0.0.5",
+	"version": "0.0.6",
 	"description": "miniprogram js library",
 	"main": "miniprogram_dist/index.js",
 	"scripts": {
@@ -12,7 +12,7 @@
 		"clean": "gulp clean",
 		"test": "jest ./test/* --silent --bail",
 		"coverage": "jest ./test/* --coverage --bail",
-		"lint": "eslint \"src/**/*.js\"",
+		"lint": "eslint \"src/**/*.js\" --fix",
 		"lint-tools": "eslint \"tools/**/*.js\" --rule \"import/no-extraneous-dependencies: false\""
 	},
 	"miniprogram": "miniprogram_dist",

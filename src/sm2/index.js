@@ -1,32 +1,12 @@
+/* eslint-disable no-use-before-define */
 const {BigInteger} = require('jsbn')
 const {encodeDer, decodeDer} = require('./asn1')
-const {ECPointFp} = require('./ec')
 const SM3Digest = require('./sm3')
 const SM2Cipher = require('./sm2')
 const _ = require('./utils')
 
 const {G, curve, n} = _.generateEcparam()
 const C1C2C3 = 0
-
-/**
- * sm3杂凑算法
- */
-function doSm3Hash(hashHex, publicKey) {
-  const smDigest = new SM3Digest()
-
-  const z = new SM3Digest().getZ(G, publicKey.substr(2, 128))
-  const zValue = _.hexToArray(_.arrayToHex(z).toString())
-
-  const p = hashHex
-  const pValue = _.hexToArray(p)
-
-  const hashData = new Array(smDigest.getDigestSize())
-  smDigest.blockUpdate(zValue, 0, zValue.length)
-  smDigest.blockUpdate(pValue, 0, pValue.length)
-  smDigest.doFinal(hashData, 0)
-
-  return _.arrayToHex(hashData).toString()
-}
 
 /**
  * 加密
@@ -90,29 +70,6 @@ function doDecrypt(encryptData, privateKey, cipherMode = 1) {
   } else {
     return ''
   }
-}
-
-/**
- * 获取椭圆曲线点
- */
-function getPoint() {
-  const keypair = _.generateKeyPairHex()
-  const PA = ECPointFp.decodeFromHex(curve, keypair.publicKey)
-
-  keypair.k = new BigInteger(keypair.privateKey, 16)
-  keypair.x1 = PA.getX().toBigInteger()
-
-  return keypair
-}
-
-/**
- * 计算公钥
- */
-function getPublicKeyFromPrivateKey(privateKey) {
-  const PA = G.multiply(new BigInteger(privateKey, 16))
-  const x = _.leftPad(PA.getX().toBigInteger().toString(16), 64)
-  const y = _.leftPad(PA.getY().toBigInteger().toString(16), 64)
-  return '04' + x + y
 }
 
 /**
@@ -185,7 +142,7 @@ function doVerifySignature(msg, signHex, publicKey, {der, hash} = {}) {
     s = new BigInteger(signHex.substring(64), 16)
   }
 
-  const PA = ECPointFp.decodeFromHex(curve, publicKey)
+  const PA = curve.decodePointHex(publicKey)
   const e = new BigInteger(hashHex, 16)
 
   // t = (r + s) mod n
@@ -200,6 +157,49 @@ function doVerifySignature(msg, signHex, publicKey, {der, hash} = {}) {
   const R = e.add(x1y1.getX().toBigInteger()).mod(n)
 
   return r.equals(R)
+}
+
+/**
+ * sm3杂凑算法
+ */
+function doSm3Hash(hashHex, publicKey) {
+  const smDigest = new SM3Digest()
+
+  const z = new SM3Digest().getZ(G, publicKey.substr(2, 128))
+  const zValue = _.hexToArray(_.arrayToHex(z).toString())
+
+  const p = hashHex
+  const pValue = _.hexToArray(p)
+
+  const hashData = new Array(smDigest.getDigestSize())
+  smDigest.blockUpdate(zValue, 0, zValue.length)
+  smDigest.blockUpdate(pValue, 0, pValue.length)
+  smDigest.doFinal(hashData, 0)
+
+  return _.arrayToHex(hashData).toString()
+}
+
+/**
+ * 计算公钥
+ */
+function getPublicKeyFromPrivateKey(privateKey) {
+  const PA = G.multiply(new BigInteger(privateKey, 16))
+  const x = _.leftPad(PA.getX().toBigInteger().toString(16), 64)
+  const y = _.leftPad(PA.getY().toBigInteger().toString(16), 64)
+  return '04' + x + y
+}
+
+/**
+ * 获取椭圆曲线点
+ */
+function getPoint() {
+  const keypair = _.generateKeyPairHex()
+  const PA = curve.decodePointHex(keypair.publicKey)
+
+  keypair.k = new BigInteger(keypair.privateKey, 16)
+  keypair.x1 = PA.getX().toBigInteger()
+
+  return keypair
 }
 
 module.exports = {

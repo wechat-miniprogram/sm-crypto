@@ -1,6 +1,5 @@
 /* eslint-disable no-bitwise, no-mixed-operators, class-methods-use-this */
 const {BigInteger} = require('jsbn')
-const {ECPointFp} = require('./ec')
 const SM3Digest = require('./sm3')
 const _ = require('./utils')
 
@@ -42,7 +41,7 @@ class SM2Cipher {
     const k = new BigInteger(keypair.privateKey, 16)
     let publicKey = keypair.publicKey
 
-    this.p2 = userKey.multiply(k)
+    this.p2 = userKey.multiply(k) // [k](Pb)
     this.reset()
 
     if (publicKey.length > 128) {
@@ -58,7 +57,7 @@ class SM2Cipher {
       if (this.keyOff === this.key.length) {
         this.nextKey()
       }
-      data[i] ^= this.key[this.keyOff++]
+      data[i] ^= this.key[this.keyOff++] & 0xff
     }
   }
 
@@ -72,7 +71,7 @@ class SM2Cipher {
       if (this.keyOff === this.key.length) {
         this.nextKey()
       }
-      data[i] ^= this.key[this.keyOff++]
+      data[i] ^= this.key[this.keyOff++] & 0xff
     }
     this.sm3c3.blockUpdate(data, 0, data.length)
   }
@@ -86,7 +85,7 @@ class SM2Cipher {
 
   createPoint(x, y) {
     const publicKey = '04' + x + y
-    const point = ECPointFp.decodeFromHex(_.generateEcparam().curve, publicKey)
+    const point = _.getGlobalCurve().decodePointHex(publicKey)
     return point
   }
 }
