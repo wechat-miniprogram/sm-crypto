@@ -49,7 +49,7 @@ const Int32 = {
         reBigIntegerRadix += subBigIntegerRadixItem === '0' ? '1' : '0'
       }
       const result = parseInt(reBigIntegerRadix, 2)
-      return (result + 1)
+      return (result + 1) % 256
     } else if (n > 255) {
       const bigInteger = Number(n)
       const bigIntegerRadix = bigInteger.toString(2)
@@ -273,11 +273,7 @@ class SM3Digest {
     if (number > Int32.maxValue || number < Int32.minValue) {
       number = Int32.parse(number)
     }
-    if (number >= 0) {
-      return number >> bits
-    } else {
-      return (number >> bits) + (2 << ~bits)
-    }
+    number >>> bits
   }
 
   urShiftLong(number, bits) {
