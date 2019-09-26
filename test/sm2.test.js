@@ -25,7 +25,7 @@ test('sm2: encrypt and decrypt data', () => {
     let encryptData = sm2.doEncrypt(msgString, publicKey, cipherMode)
     let decryptData = sm2.doDecrypt(encryptData, privateKey, cipherMode)
 
-    for (let i = 0; i < 1000; i++) {
+    for (let i = 0; i < 100; i++) {
         let encryptData = sm2.doEncrypt(msgString, publicKey, cipherMode);
         let decryptData = sm2.doDecrypt(encryptData, privateKey, cipherMode);
 
