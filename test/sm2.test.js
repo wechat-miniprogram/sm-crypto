@@ -24,12 +24,13 @@ test('sm2: generate keypair', () => {
 test('sm2: encrypt and decrypt data', () => {
     let encryptData = sm2.doEncrypt(msgString, publicKey, cipherMode)
     let decryptData = sm2.doDecrypt(encryptData, privateKey, cipherMode)
+    expect(decryptData).toBe(msgString);
 
     for (let i = 0; i < 100; i++) {
-        let encryptData = sm2.doEncrypt(msgString, publicKey, cipherMode);
-        let decryptData = sm2.doDecrypt(encryptData, privateKey, cipherMode);
+        let encryptData = sm2.doEncrypt(msgString, publicKey, cipherMode)
+        let decryptData = sm2.doDecrypt(encryptData, privateKey, cipherMode)
 
-        expect(decryptData).toBe(msgString);
+        expect(decryptData).toBe(msgString)
     }
 })
 
@@ -62,7 +63,17 @@ test('sm2: sign data and verify sign', () => {
     let verifyResult4 = sm2.doVerifySignature(msgString, sigValueHex4, publicKey, {
         hash: true,
     })
-    expect(verifyResult3).toBe(true)
+    expect(verifyResult4).toBe(true)
+    
+    for (let i = 0; i < 100; i++) {
+        sigValueHex4 = sm2.doSignature(msgString, privateKey, {
+            hash: true,
+        })
+        verifyResult4 = sm2.doVerifySignature(msgString, sigValueHex4, publicKey, {
+            hash: true,
+        })
+        expect(verifyResult4).toBe(true)
+    }
 
     // 纯签名 + 生成椭圆曲线点 + sm3杂凑（不做公钥推导）
     let sigValueHex5 = sm2.doSignature(msgString, privateKey, {
@@ -73,5 +84,5 @@ test('sm2: sign data and verify sign', () => {
         hash: true,
         publicKey,
     })
-    expect(verifyResult3).toBe(true)
+    expect(verifyResult5).toBe(true)
 })
