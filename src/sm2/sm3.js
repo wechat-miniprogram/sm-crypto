@@ -119,9 +119,7 @@ class SM3Digest {
     const ww = this.X
     const ww_ = new Array(64)
     for (i = 16; i < 68; i++) {
-      ww[i] = this.p1(ww[i - 16] ^ ww[i - 9] ^ (this.rotate(ww[i - 3], 15))) ^
-        (this.rotate(ww[i - 13], 7)) ^
-        ww[i - 6]
+      ww[i] = this.p1(ww[i - 16] ^ ww[i - 9] ^ (this.rotate(ww[i - 3], 15))) ^ (this.rotate(ww[i - 13], 7)) ^ ww[i - 6]
     }
     for (i = 0; i < 64; i++) {
       ww_[i] = ww[i] ^ ww[i + 4]
@@ -129,8 +127,11 @@ class SM3Digest {
     const vv = this.v
     const vv_ = this.v_
     copyArray(vv, 0, vv_, 0, this.v0.length)
-    let SS1; let SS2; let TT1; let TT2; let
-      aaa
+    let SS1
+    let SS2
+    let TT1
+    let TT2
+    let aaa
     for (i = 0; i < 16; i++) {
       aaa = this.rotate(vv_[0], 12)
       SS1 = Int32.parse(Int32.parse(aaa + vv_[4]) + this.rotate(this.T_00_15, i))

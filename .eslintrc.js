@@ -81,7 +81,8 @@ module.exports = {
     'semi': [
       'error',
       'never'
-    ]
+    ],
+    'max-len': 'off',
   },
   'globals': {
     'window': true,
