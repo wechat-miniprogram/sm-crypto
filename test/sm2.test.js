@@ -24,7 +24,7 @@ test('sm2: generate keypair', () => {
 test('sm2: encrypt and decrypt data', () => {
     let encryptData = sm2.doEncrypt(msgString, publicKey, cipherMode)
     let decryptData = sm2.doDecrypt(encryptData, privateKey, cipherMode)
-    expect(decryptData).toBe(msgString);
+    expect(decryptData).toBe(msgString)
 
     for (let i = 0; i < 100; i++) {
         let encryptData = sm2.doEncrypt(msgString, publicKey, cipherMode)
