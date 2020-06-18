@@ -274,7 +274,7 @@ class SM3Digest {
     if (number > Int32.maxValue || number < Int32.minValue) {
       number = Int32.parse(number)
     }
-    number >>> bits
+    return number >>> bits
   }
 
   urShiftLong(number, bits) {
