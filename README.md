@@ -110,7 +110,7 @@ let hashData = sm3('abc') // 杂凑
 ### 加密
 
 ```js
-const sm4 = require('sm-crypto').sm4
+const sm4 = require('miniprogram-sm-crypto').sm4
 const msg = 'hello world! 我是 juneandgreen.' // 可以为 utf8 串或字节数组
 const key = '0123456789abcdeffedcba9876543210' // 可以为 16 进制串或字节数组，要求为 128 比特
 
@@ -122,7 +122,7 @@ let encryptData = sm4.encrypt(msg, key, {padding: 'none', output: 'array'}) // �
 ### 解密
 
 ```js
-const sm4 = require('sm-crypto').sm4
+const sm4 = require('miniprogram-sm-crypto').sm4
 const encryptData = '0e395deb10f6e8a17e17823e1fd9bd98a1bff1df508b5b8a1efb79ec633d1bb129432ac1b74972dbe97bab04f024e89c' // 可以为 16 进制串或字节数组
 const key = '0123456789abcdeffedcba9876543210' // 可以为 16 进制串或字节数组，要求为 128 比特
 
