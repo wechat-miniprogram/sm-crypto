@@ -42,6 +42,10 @@ function doDecrypt(encryptData, privateKey, cipherMode = 1) {
 
   privateKey = new BigInteger(privateKey, 16)
 
+  if (encryptData.substr(0, 2) === '04') {
+    encryptData = encryptData.substring(2)
+  }
+
   const c1X = encryptData.substr(0, 64)
   const c1Y = encryptData.substr(0 + c1X.length, 64)
   const c1Length = c1X.length + c1Y.length

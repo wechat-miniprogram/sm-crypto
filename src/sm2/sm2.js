@@ -39,16 +39,11 @@ class SM2Cipher {
   initEncipher(userKey) {
     const keypair = _.generateKeyPairHex()
     const k = new BigInteger(keypair.privateKey, 16)
-    let publicKey = keypair.publicKey
 
     this.p2 = userKey.multiply(k) // [k](Pb)
     this.reset()
 
-    if (publicKey.length > 128) {
-      publicKey = publicKey.substr(publicKey.length - 128)
-    }
-
-    return publicKey
+    return keypair.publicKey
   }
 
   encryptBlock(data) {
