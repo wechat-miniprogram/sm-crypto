@@ -33,7 +33,7 @@ function generateEcparam() {
 }
 
 /**
- * 生成密钥对
+ * 生成密钥对：publicKey = privateKey * G
  */
 function generateKeyPairHex() {
   const d = new BigInteger(n.bitLength(), rng).mod(n.subtract(BigInteger.ONE)).add(BigInteger.ONE) // 随机数
@@ -48,9 +48,9 @@ function generateKeyPairHex() {
 }
 
 /**
- * 解析utf8字符串到16进制
+ * utf8串转16进制串
  */
-function parseUtf8StringToHex(input) {
+function utf8ToHex(input) {
   input = unescape(encodeURIComponent(input))
 
   const length = input.length
@@ -73,13 +73,6 @@ function parseUtf8StringToHex(input) {
 }
 
 /**
- * 解析arrayBuffer到16进制字符串
- */
-function parseArrayBufferToHex(input) {
-  return Array.prototype.map.call(new Uint8Array(input), x => ('00' + x.toString(16)).slice(-2)).join('')
-}
-
-/**
  * 补全16进制字符串
  */
 function leftPad(input, num) {
@@ -92,22 +85,10 @@ function leftPad(input, num) {
  * 转成16进制串
  */
 function arrayToHex(arr) {
-  const words = []
-  let j = 0
-  for (let i = 0; i < arr.length * 2; i += 2) {
-    words[i >>> 3] |= parseInt(arr[j], 10) << (24 - (i % 8) * 4)
-    j++
-  }
-
-  // 转换到16进制
-  const hexChars = []
-  for (let i = 0; i < arr.length; i++) {
-    const bite = (words[i >>> 2] >>> (24 - (i % 4) * 8)) & 0xff
-    hexChars.push((bite >>> 4).toString(16))
-    hexChars.push((bite & 0x0f).toString(16))
-  }
-
-  return hexChars.join('')
+  return arr.map(item => {
+    item = item.toString(16)
+    return item.length === 1 ? '0' + item : item
+  }).join('')
 }
 
 /**
@@ -136,7 +117,7 @@ function arrayToUtf8(arr) {
 }
 
 /**
- * 转成ascii码数组
+ * 转成字节数组
  */
 function hexToArray(hexStr) {
   const words = []
@@ -158,8 +139,7 @@ module.exports = {
   getGlobalCurve,
   generateEcparam,
   generateKeyPairHex,
-  parseUtf8StringToHex,
-  parseArrayBufferToHex,
+  utf8ToHex,
   leftPad,
   arrayToHex,
   arrayToUtf8,
