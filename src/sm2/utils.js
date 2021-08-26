@@ -34,9 +34,12 @@ function generateEcparam() {
 
 /**
  * 生成密钥对：publicKey = privateKey * G
+ * 
+ * @param {Array} [randomValues=null] 随机数数组
  */
-function generateKeyPairHex() {
-  const d = new BigInteger(n.bitLength(), rng).mod(n.subtract(BigInteger.ONE)).add(BigInteger.ONE) // 随机数
+function generateKeyPairHex(randomValues=null) {
+  const rv = randomValues ? new BigInteger(randomValues) : new BigInteger(n.bitLength(), rng)
+  const d = rv.mod(n.subtract(BigInteger.ONE)).add(BigInteger.ONE) // 随机数
   const privateKey = leftPad(d.toString(16), 64)
 
   const P = G.multiply(d) // P = dG，p 为公钥，d 为私钥
@@ -135,6 +138,23 @@ function hexToArray(hexStr) {
   return words
 }
 
+
+/**
+ * 验证公钥是否为椭圆曲线上的点
+ */
+function verifyECPoint(publicKey) {
+  const pkPoint = curve.decodePointHex(publicKey)
+  if (!pkPoint) {
+    return false
+  }
+  const x = pkPoint.getX()
+  const y = pkPoint.getY()
+
+  // y^2 == x^3 + ax + b
+  return y.square()
+          .equals( x.multiply(x.square()).add(x.multiply(curve.a)).add(curve.b) )
+}
+
 module.exports = {
   getGlobalCurve,
   generateEcparam,
@@ -144,4 +164,5 @@ module.exports = {
   arrayToHex,
   arrayToUtf8,
   hexToArray,
+  verifyECPoint,
 }
