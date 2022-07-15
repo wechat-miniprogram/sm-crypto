@@ -327,6 +327,11 @@ function sm4(inArray, key, cryptFlag, {
   // 去除填充，sm4 是 16 个字节一个分组，所以统一走到 pkcs#7
   if ((padding === 'pkcs#5' || padding === 'pkcs#7') && cryptFlag === DECRYPT) {
     const paddingCount = outArray[outArray.length - 1]
+    for(let i = 1; i <= paddingCount; i++) {
+      if (outArray[outArray.length - i] !== paddingCount) {
+        throw new Error('padding is invalid')
+      }
+    }
     outArray.splice(outArray.length - paddingCount, paddingCount)
   }
 
