@@ -1,6 +1,6 @@
 {
 	"name": "miniprogram-sm-crypto",
-	"version": "0.3.9",
+	"version": "0.3.10",
 	"description": "miniprogram js library",
 	"main": "miniprogram_dist/index.js",
 	"scripts": {

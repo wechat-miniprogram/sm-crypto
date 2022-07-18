@@ -1,4 +1,13 @@
-const sm3 = require('../sm2/sm3')
+const {sm3, hmac} = require('../sm2/sm3')
+
+/**
+ * 补全16进制字符串
+ */
+function leftPad(input, num) {
+  if (input.length >= num) return input
+
+  return (new Array(num - input.length + 1)).join('0') + input
+}
 
 /**
  * 字节数组转 16 进制串
@@ -8,6 +17,25 @@ function ArrayToHex(arr) {
     item = item.toString(16)
     return item.length === 1 ? '0' + item : item
   }).join('')
+}
+
+/**
+ * 转成字节数组
+ */
+function hexToArray(hexStr) {
+  const words = []
+  let hexStrLength = hexStr.length
+
+  if (hexStrLength % 2 !== 0) {
+    hexStr = leftPad(hexStr, hexStrLength + 1)
+  }
+
+  hexStrLength = hexStr.length
+
+  for (let i = 0; i < hexStrLength; i += 2) {
+    words.push(parseInt(hexStr.substr(i, 2), 16))
+  }
+  return words
 }
 
 /**
@@ -48,7 +76,19 @@ function utf8ToArray(str) {
   return arr
 }
 
-module.exports = function (input) {
+module.exports = function (input, options) {
   input = typeof input === 'string' ? utf8ToArray(input) : Array.prototype.slice.call(input)
+
+  if (options) {
+    const mode = options.mode || 'hmac'
+    if (mode !== 'hmac') throw new Error('invalid mode')
+
+    let key = options.key
+    if (!key) throw new Error('invalid key')
+
+    key = typeof key === 'string' ? hexToArray(key) : Array.prototype.slice.call(key)
+    return ArrayToHex(hmac(input, key))
+  }
+
   return ArrayToHex(sm3(input))
 }
