@@ -9,6 +9,7 @@ const {BigInteger} = require('jsbn')
  * Only Fp curves implemented for now
  */
 
+const TWO = new BigInteger('2')
 const THREE = new BigInteger('3')
 
 /**
@@ -293,10 +294,23 @@ class ECCurveFp {
       // 第一个字节
       case 0:
         return this.infinity
+      // 压缩
       case 2:
       case 3:
-        // 不支持的压缩方式
-        return null
+        const x = this.fromBigInteger(new BigInteger(s.substr(2), 16))
+        // 对p ≡ 3 (mod4)，即存在正整数u，使得p = 4u+3
+        // 计算y = (√ (x^3 + ax + b) % p)^(u+1) modp
+        let y = this.fromBigInteger(x.multiply(x.square()).add(
+          x.multiply(this.a)
+        ).add(this.b).toBigInteger()
+          .modPow(
+            this.q.divide(new BigInteger('4')).add(BigInteger.ONE), this.q
+          ))
+        // 算出结果2进制最后1位不等于第1个字节-2则取反
+        if (!y.toBigInteger().mod(TWO).equals(new BigInteger(s.substr(0, 2), 16).subtract(TWO))) {
+          y = y.negate()
+        }
+        return new ECPointFp(this, x, y)
       case 4:
       case 6:
       case 7:
