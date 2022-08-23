@@ -294,19 +294,19 @@ class ECCurveFp {
       // 第一个字节
       case 0:
         return this.infinity
-      // 压缩
       case 2:
       case 3:
+        // 压缩
         const x = this.fromBigInteger(new BigInteger(s.substr(2), 16))
-        // 对p ≡ 3 (mod4)，即存在正整数u，使得p = 4u+3
-        // 计算y = (√ (x^3 + ax + b) % p)^(u+1) modp
+        // 对 p ≡ 3 (mod4)，即存在正整数 u，使得 p = 4u + 3
+        // 计算 y = (√ (x^3 + ax + b) % p)^(u + 1) modp
         let y = this.fromBigInteger(x.multiply(x.square()).add(
           x.multiply(this.a)
         ).add(this.b).toBigInteger()
           .modPow(
             this.q.divide(new BigInteger('4')).add(BigInteger.ONE), this.q
           ))
-        // 算出结果2进制最后1位不等于第1个字节-2则取反
+        // 算出结果 2 进制最后 1 位不等于第 1 个字节减 2 则取反
         if (!y.toBigInteger().mod(TWO).equals(new BigInteger(s.substr(0, 2), 16).subtract(TWO))) {
           y = y.negate()
         }

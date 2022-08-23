@@ -52,18 +52,14 @@ function generateKeyPairHex(a, b, c) {
  * 生成压缩公钥
  */
 function compressPublicKeyHex(s) {
-  if (s.length !== 130) {
-    throw new Error('Invalid public key to compress')
-  }
+  if (s.length !== 130) throw new Error('Invalid public key to compress')
 
   const len = (s.length - 2) / 2
   const xHex = s.substr(2, len)
   const y = new BigInteger(s.substr(len + 2, len), 16)
 
   let prefix = '03'
-  if (y.mod(new BigInteger('2')).equals(BigInteger.ZERO)) {
-    prefix = '02'
-  }
+  if (y.mod(new BigInteger('2')).equals(BigInteger.ZERO)) prefix = '02'
 
   return prefix + xHex
 }
