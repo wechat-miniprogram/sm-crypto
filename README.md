@@ -48,6 +48,8 @@ encryptData = sm2.doEncrypt(msgArray, publicKey, cipherMode) // 加密结果，�
 decryptData = sm2.doDecrypt(encryptData, privateKey, cipherMode, {output: 'array'}) // 解密结果，输出数组
 ```
 
+> PS：密文会在解密时自动追加 `04`，如遇到其他工具追加的 `04` 需手动去除再传入
+
 ### 签名验签
 
 > ps：理论上来说，只做纯签名是最快的。
