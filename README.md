@@ -1,5 +1,7 @@
 # sm-crypto
 
+> 本仓库仍可使用，但不再维护，后续可期待小程序官方提供的原生国密方案。
+
 小程序 js 库。国密算法 sm2、sm3 和 sm4 的实现。
 
 > 使用此组件需要依赖小程序基础库 2.2.1 以上版本，同时依赖开发者工具的 npm 构建。具体详情可查阅[官方 npm 文档](https://developers.weixin.qq.com/miniprogram/dev/devtools/npm.html)。
